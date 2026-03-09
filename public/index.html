@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberOps Platform</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#03050a; color:#b8d4c8; font-family:monospace; }
+  .header { background:#070d16; border-bottom:1px solid #0e2030; padding:1rem 2rem; display:flex; align-items:center; justify-content:space-between; }
+  .logo { color:#00ff9f; font-size:1.2rem; letter-spacing:4px; font-weight:bold; }
+  .nav { display:flex; gap:0.5rem; flex-wrap:wrap; }
+  .nav-btn { background:none; border:1px solid #0e2030; color:#6a8a7a; padding:0.4rem 0.8rem; cursor:pointer; font-family:monospace; font-size:0.7rem; letter-spacing:1px; border-radius:4px; transition:all 0.2s; }
+  .nav-btn:hover, .nav-btn.active { border-color:#00ff9f; color:#00ff9f; background:rgba(0,255,159,0.05); }
+  .main { max-width:1400px; margin:0 auto; padding:1.5rem; }
+  .panel { display:none; } .panel.active { display:block; }
+  .card { background:#070d16; border:1px solid #0e2030; border-radius:8px; padding:1.25rem; margin-bottom:1rem; }
+  .card-title { color:#00ff9f; font-size:0.75rem; letter-spacing:2px; margin-bottom:1rem; }
+  .inp { background:#03050a; border:1px solid #0e2030; color:#00ff9f; font-family:monospace; padding:0.6rem 0.9rem; border-radius:5px; font-size:0.85rem; width:100%; }
+  .inp:focus { outline:none; border-color:#00ff9f; }
+  .btn { background:none; border:1px solid #00ff9f; color:#00ff9f; font-family:monospace; font-size:0.65rem; letter-spacing:2px; padding:0.6rem 1.2rem; border-radius:5px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+  .btn:hover { background:rgba(0,255,159,0.1); }
+  .btn-r { border-color:#ff2d55; color:#ff2d55; }
+  .btn-r:hover { background:rgba(255,45,85,0.1); }
+  .btn-y { border-color:#ffcc00; color:#ffcc00; }
+  .row { display:flex; gap:0.75rem; margin-bottom:0.75rem; flex-wrap:wrap; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; }
+  .rbox { background:#000; border:1px solid #0e2030; border-radius:5px; padding:0.85rem; min-height:80px; font-size:0.78rem; line-height:1.7; }
+  .rph { color:#2a3a30; text-align:center; padding:2rem; font-size:0.72rem; }
+  .notice { border-radius:5px; padding:0.6rem 0.85rem; font-size:0.7rem; margin-bottom:0.85rem; }
+  .n-y { background:rgba(255,204,0,0.05); border:1px solid rgba(255,204,0,0.2); color:#ffcc00; }
+  .n-g { background:rgba(0,255,159,0.05); border:1px solid rgba(0,255,159,0.2); color:#00ff9f; }
+  .n-r { background:rgba(255,45,85,0.05); border:1px solid rgba(255,45,85,0.2); color:#ff2d55; }
+  .n-c { background:rgba(0,229,255,0.05); border:1px solid rgba(0,229,255,0.2); color:#00e5ff; }
+  .ldr { display:none; align-items:center; gap:0.6rem; padding:0.75rem; color:#00ff9f; font-size:0.73rem; }
+  .ldr.on { display:flex; }
+  .spin { width:16px; height:16px; border:1.5px solid #0e2030; border-top-color:#00ff9f; border-radius:50%; animation:spin 0.7s linear infinite; }
+  .vrd { display:inline-flex; align-items:center; gap:0.5rem; padding:0.4rem 0.9rem; border-radius:4px; font-size:0.65rem; letter-spacing:2px; font-weight:bold; margin-bottom:0.75rem; }
+  .vclean { background:rgba(0,255,159,0.08); border:1px solid #00ff9f; color:#00ff9f; }
+  .vmal { background:rgba(255,45,85,0.08); border:1px solid #ff2d55; color:#ff2d55; }
+  .vsusp { background:rgba(255,204,0,0.08); border:1px solid #ffcc00; color:#ffcc00; }
+  .vunk { background:rgba(106,138,122,0.08); border:1px solid #6a8a7a; color:#6a8a7a; }
+  .dtbl { width:100%; border-collapse:collapse; font-size:0.75rem; }
+  .dtbl tr { border-bottom:1px solid #0e2030; }
+  .dtbl td { padding:0.35rem 0.5rem; }
+  .dtbl td:first-child { color:#6a8a7a; width:150px; font-size:0.65rem; }
+  .feed-item { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0.5rem; border-bottom:1px solid #0e2030; font-size:0.73rem; }
+  .ftag { font-size:0.55rem; padding:0.1rem 0.35rem; border-radius:3px; white-space:nowrap; }
+  .tmal { background:rgba(255,45,85,0.12); color:#ff2d55; border:1px solid rgba(255,45,85,0.25); }
+  .tcti { background:rgba(0,229,255,0.12); color:#00e5ff; border:1px solid rgba(0,229,255,0.25); }
+  .tkev { background:rgba(255,45,85,0.2); color:#ff2d55; border:1px solid #ff2d55; }
+  .cvss { display:inline-block; padding:0.2rem 0.5rem; border-radius:3px; font-size:0.65rem; font-weight:bold; }
+  .cvss-c { background:rgba(255,45,85,0.15); color:#ff2d55; border:1px solid #ff2d55; }
+  .cvss-h { background:rgba(255,107,53,0.15); color:#ff6b35; border:1px solid #ff6b35; }
+  .cvss-m { background:rgba(255,204,0,0.15); color:#ffcc00; border:1px solid #ffcc00; }
+  .cvss-l { background:rgba(0,229,255,0.15); color:#00e5ff; border:1px solid #00e5ff; }
+  .alert-badge { background:#ff2d55; color:#fff; border-radius:50%; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; font-size:0.6rem; margin-left:0.3rem; }
+  .asset-row { display:flex; align-items:center; gap:0.75rem; padding:0.6rem; border-bottom:1px solid #0e2030; font-size:0.75rem; }
+  .asset-row:last-child { border-bottom:none; }
+  .tag { font-size:0.58rem; padding:0.1rem 0.4rem; border-radius:3px; border:1px solid #0e2030; color:#6a8a7a; }
+  .chat-wrap { height:400px; overflow-y:auto; background:#000; border:1px solid #0e2030; border-radius:5px; padding:1rem; margin-bottom:0.75rem; }
+  .msg { margin-bottom:1rem; font-size:0.78rem; line-height:1.6; }
+  .msg-user { color:#00e5ff; }
+  .msg-bot { color:#00ff9f; }
+  .msg-label { font-size:0.6rem; letter-spacing:1px; margin-bottom:0.25rem; opacity:0.6; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media(max-width:768px) { .grid2,.grid3 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">⚡ CYBEROPS</div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="nav('bot')">🤖 BOT ANALYSE</button>
+    <button class="nav-btn" onclick="nav('url')">🔍 URL/IP</button>
+    <button class="nav-btn" onclick="nav('file')">🦠 FICHIER</button>
+    <button class="nav-btn" onclick="nav('cve')">💀 CVE</button>
+    <button class="nav-btn" onclick="nav('kev')">🚨 CISA KEV</button>
+    <button class="nav-btn" onclick="nav('dns')">🌐 DNS/SSL</button>
+    <button class="nav-btn" onclick="nav('email')">📧 EMAIL SEC</button>
+    <button class="nav-btn" onclick="nav('inventory')">📦 INVENTAIRE</button>
+    <button class="nav-btn" onclick="nav('alerts')">🔔 ALERTES <span class="alert-badge" id="alert-count">0</span></button>
+    <button class="nav-btn" onclick="nav('breach')">🔓 FUITES</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══ BOT ═══ -->
+<div class="panel active" id="panel-bot">
+  <div class="card">
+    <div class="card-title">🤖 ANALYSTE SOC IA — PROPULSÉ PAR CLAUDE</div>
+    <div class="notice n-c">Collez un email suspect, des logs, une alerte EDR, une IP, une URL — le bot analyse, enrichit avec les APIs et donne un verdict actionnable.</div>
+    <div class="chat-wrap" id="chat-messages">
+      <div class="msg msg-bot">
+        <div class="msg-label">CYBEROPS BOT</div>
+        Bonjour. Je suis votre analyste SOC IA. Envoyez-moi un email suspect (headers + corps), une URL, une IP, un hash, des logs ou toute alerte de sécurité. J'analyse et je vous dis quoi faire.
+      </div>
+    </div>
+    <div style="margin-bottom:0.5rem">
+      <input class="inp" id="claude-key" type="password" placeholder="Clé API Claude (sk-ant-...) — requis" style="margin-bottom:0.5rem">
+    </div>
+    <div class="row">
+      <textarea class="inp" id="bot-input" placeholder="Collez ici: email complet avec headers, URL suspecte, alerte EDR, logs firewall..." rows="4" style="resize:vertical"></textarea>
+    </div>
+    <div class="row">
+      <button class="btn" onclick="sendBot()">ANALYSER</button>
+      <button class="btn btn-r" onclick="clearChat()">EFFACER</button>
+      <select class="inp" id="bot-mode" style="max-width:200px">
+        <option value="phishing">Analyse Phishing</option>
+        <option value="malware">Analyse Malware</option>
+        <option value="incident">Analyse Incident</option>
+        <option value="log">Analyse Logs</option>
+        <option value="free">Question libre</option>
+      </select>
+    </div>
+    <div class="ldr" id="ldr-bot"><div class="spin"></div>ANALYSE EN COURS...</div>
+  </div>
+</div>
+
+<!-- ═══ URL/IP ═══ -->
+<div class="panel" id="panel-url">
+  <div class="card">
+    <div class="card-title">🔍 ANALYSE URL / IP</div>
+    <div class="row">
+      <input class="inp" id="url-inp" placeholder="https://exemple.com ou adresse IP" onkeydown="if(event.key==='Enter')scanTarget()">
+      <button class="btn" onclick="scanTarget()">ANALYSER</button>
+    </div>
+    <div class="ldr" id="ldr-url"><div class="spin"></div>ANALYSE...</div>
+    <div class="rbox" id="url-result"><div class="rph">[ Entrez une URL ou une IP ]</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-title">📊 SOURCES</div><div id="url-sources"><div class="rph">[ Sources ]</div></div></div>
+    <div class="card"><div class="card-title">🌐 TECHNIQUE</div><div id="url-tech"><div class="rph">[ Technique ]</div></div></div>
+  </div>
+</div>
+
+<!-- ═══ FILE ═══ -->
+<div class="panel" id="panel-file">
+  <div class="card">
+    <div class="card-title">🦠 ANALYSE FICHIER</div>
+    <div style="border:2px dashed #0e2030;border-radius:7px;padding:2rem;text-align:center;cursor:pointer;margin-bottom:0.75rem" onclick="document.getElementById('fi').click()" id="dz" ondragover="event.preventDefault();this.style.borderColor='#00ff9f'" ondragleave="this.style.borderColor='#0e2030'" ondrop="event.preventDefault();this.style.borderColor='#0e2030';handleFile(event.dataTransfer.files[0])">
+      <div style="font-size:2rem;margin-bottom:0.5rem;opacity:0.5">📁</div>
+      <div style="color:#6a8a7a;font-size:0.75rem">GLISSEZ UN FICHIER ou CLIQUEZ</div>
+    </div>
+    <input type="file" id="fi" style="display:none" onchange="handleFile(event.target.files[0])">
+    <div class="row">
+      <input class="inp" id="fi-hash" placeholder="Ou entrez un hash SHA-256...">
+      <button class="btn" onclick="lookupHash()">LOOKUP</button>
+    </div>
+    <div class="ldr" id="ldr-file"><div class="spin"></div>ANALYSE...</div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-title">🔐 HASHES</div><div id="file-hashes"><div class="rph">[ Hashes ]</div></div></div>
+    <div class="card"><div class="card-title">🛡️ VERDICT</div><div id="file-verdict"><div class="rph">[ Verdict ]</div></div></div>
+    <div class="card"><div class="card-title">📊 MÉTADONNÉES</div><div id="file-meta"><div class="rph">[ Meta ]</div></div></div>
+  </div>
+</div>
+
+<!-- ═══ CVE ═══ -->
+<div class="panel" id="panel-cve">
+  <div class="card">
+    <div class="card-title">💀 CVE LOOKUP — NIST NVD</div>
+    <div class="row">
+      <input class="inp" id="cve-inp" placeholder="CVE-2024-1234 ou mot-clé: apache, log4j..." onkeydown="if(event.key==='Enter')searchCVE()">
+      <select class="inp" id="cve-sev" style="max-width:150px">
+        <option value="">Toutes</option>
+        <option value="CRITICAL">CRITICAL</option>
+        <option value="HIGH">HIGH</option>
+        <option value="MEDIUM">MEDIUM</option>
+      </select>
+      <button class="btn btn-y" onclick="searchCVE()">RECHERCHER</button>
+    </div>
+    <div class="ldr" id="ldr-cve"><div class="spin"></div>INTERROGATION NIST NVD...</div>
+    <div id="cve-results"><div class="rph">[ Recherchez un CVE ou un produit ]</div></div>
+  </div>
+</div>
+
+<!-- ═══ KEV ═══ -->
+<div class="panel" id="panel-kev">
+  <div class="card">
+    <div class="card-title">🚨 CISA KEV — VULNÉRABILITÉS ACTIVEMENT EXPLOITÉES</div>
+    <div class="notice n-r">Vulnérabilités confirmées exploitées dans la nature. Priorité de patching maximale.</div>
+    <div class="row">
+      <input class="inp" id="kev-filter" placeholder="Filtrer par vendor, CVE, produit...">
+      <button class="btn btn-r" onclick="loadKEV()">CHARGER</button>
+      <button class="btn" onclick="filterKEV()">FILTRER</button>
+    </div>
+    <div class="ldr" id="ldr-kev"><div class="spin"></div>CHARGEMENT CISA KEV...</div>
+    <div id="kev-stats" style="margin-bottom:0.75rem"></div>
+    <div class="rbox" id="kev-results" style="min-height:300px;padding:0.5rem"><div class="rph">[ Cliquez CHARGER ]</div></div>
+  </div>
+</div>
+
+<!-- ═══ DNS ═══ -->
+<div class="panel" id="panel-dns">
+  <div class="card">
+    <div class="card-title">🌐 DNS / SSL / OSINT DOMAINE</div>
+    <div class="row">
+      <input class="inp" id="dns-inp" placeholder="domain.tld" onkeydown="if(event.key==='Enter')analyzeDomain()">
+      <button class="btn" onclick="analyzeDomain()">ANALYSER</button>
+    </div>
+    <div class="ldr" id="ldr-dns"><div class="spin"></div>RÉSOLUTION DNS...</div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-title">📋 DNS</div><div id="dns-records"><div class="rph">[ Enregistrements DNS ]</div></div></div>
+    <div class="card"><div class="card-title">🔒 CERTIFICATS & SOUS-DOMAINES</div><div id="dns-certs"><div class="rph">[ crt.sh ]</div></div></div>
+  </div>
+</div>
+
+<!-- ═══ EMAIL SEC ═══ -->
+<div class="panel" id="panel-email">
+  <div class="card">
+    <div class="card-title">📧 EMAIL SECURITY — SPF / DKIM / DMARC</div>
+    <div class="row">
+      <input class="inp" id="email-inp" placeholder="domain.tld" onkeydown="if(event.key==='Enter')checkEmail()">
+      <button class="btn" onclick="checkEmail()">VÉRIFIER</button>
+    </div>
+    <div class="ldr" id="ldr-email"><div class="spin"></div>VÉRIFICATION...</div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-title">📮 SPF</div><div id="spf-r"><div class="rph">[ SPF ]</div></div></div>
+    <div class="card"><div class="card-title">🔏 DKIM</div><div id="dkim-r"><div class="rph">[ DKIM ]</div></div></div>
+    <div class="card"><div class="card-title">🛡️ DMARC</div><div id="dmarc-r"><div class="rph">[ DMARC ]</div></div></div>
+  </div>
+  <div class="card"><div class="card-title">📊 SCORE</div><div id="email-score"><div class="rph">[ Score calculé après analyse ]</div></div></div>
+</div>
+
+<!-- ═══ INVENTAIRE ═══ -->
+<div class="panel" id="panel-inventory">
+  <div class="card">
+    <div class="card-title">📦 INVENTAIRE DU PARC — VEILLE CVE AUTOMATIQUE</div>
+    <div class="notice n-y">Ajoutez vos assets. La veille CVE tourne toutes les 12h et vous alerte si une vulnérabilité critique les affecte.</div>
+    <div class="grid3" style="margin-bottom:0.75rem">
+      <input class="inp" id="inv-vendor" placeholder="Vendor (ex: Microsoft)">
+      <input class="inp" id="inv-product" placeholder="Produit (ex: IIS)">
+      <input class="inp" id="inv-version" placeholder="Version (ex: 10.0)">
+    </div>
+    <div class="grid3" style="margin-bottom:0.75rem">
+      <select class="inp" id="inv-category">
+        <option>OS</option><option>Middleware</option><option>Application</option>
+        <option>Équipement réseau</option><option>Base de données</option><option>Autre</option>
+      </select>
+      <input class="inp" id="inv-cpe" placeholder="CPE (optionnel: cpe:2.3:a:...)">
+      <select class="inp" id="inv-crit">
+        <option value="P1">P1 — Critique métier</option>
+        <option value="P2">P2 — Important</option>
+        <option value="P3">P3 — Standard</option>
+      </select>
+    </div>
+    <div class="row">
+      <button class="btn" onclick="addAsset()">AJOUTER</button>
+      <button class="btn btn-y" onclick="runWatchNow()">▶ LANCER VEILLE MAINTENANT</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 ASSETS SURVEILLÉS</div>
+    <div id="inventory-list"><div class="rph">[ Aucun asset — ajoutez vos produits ]</div></div>
+  </div>
+</div>
+
+<!-- ═══ ALERTES ═══ -->
+<div class="panel" id="panel-alerts">
+  <div class="card">
+    <div class="card-title">🔔 ALERTES CVE — VULNÉRABILITÉS DÉTECTÉES</div>
+    <div class="row">
+      <button class="btn" onclick="loadAlerts()">RAFRAÎCHIR</button>
+      <button class="btn btn-r" onclick="clearAlerts()">TOUT EFFACER</button>
+    </div>
+    <div id="alerts-list"><div class="rph">[ Aucune alerte ]</div></div>
+  </div>
+</div>
+
+<!-- ═══ BREACH ═══ -->
+<div class="panel" id="panel-breach">
+  <div class="card">
+    <div class="card-title">🔓 FUITE DE DONNÉES</div>
+    <div class="row">
+      <input class="inp" id="breach-inp" placeholder="email@exemple.com">
+      <button class="btn btn-r" onclick="checkBreach()">VÉRIFIER EMAIL</button>
+    </div>
+    <div class="ldr" id="ldr-breach"><div class="spin"></div>VÉRIFICATION...</div>
+    <div id="breach-result"><div class="rph">[ Entrez un email ]</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔑 MOT DE PASSE COMPROMIS</div>
+    <div class="notice n-g">Hash local SHA-1 — seuls 5 caractères envoyés (k-anonymity)</div>
+    <div class="row">
+      <input class="inp" id="pwd-inp" type="password" placeholder="Mot de passe à vérifier...">
+      <button class="btn btn-r" onclick="checkPwd()">VÉRIFIER</button>
+    </div>
+    <div class="ldr" id="ldr-pwd"><div class="spin"></div>VÉRIFICATION...</div>
+    <div id="pwd-result"></div>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<script>
+// ══════════════════════════════
+// CONFIG
+// ══════════════════════════════
+const API = window.location.origin;
+let kevData = null;
+let chatHistory = [];
+
+// ══════════════════════════════
+// UTILS
+// ══════════════════════════════
+function nav(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'alerts') loadAlerts();
+  if (id === 'inventory') loadInventory();
+}
+
+function ldr(id, on) { document.getElementById(id).classList.toggle('on', on); }
+
+function vrd(cls, txt) { return `<div class="vrd ${cls}">${txt}</div>`; }
+
+function tbl(rows) {
+  return `<table class="dtbl"><tbody>${rows.map(([k,v]) =>
+    `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function cvssB(s) {
+  const n = parseFloat(s) || 0;
+  const c = n>=9?'cvss-c':n>=7?'cvss-h':n>=4?'cvss-m':'cvss-l';
+  const t = n>=9?'CRITICAL':n>=7?'HIGH':n>=4?'MEDIUM':'LOW';
+  return `<span class="cvss ${c}">${t} ${n.toFixed(1)}</span>`;
+}
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#070d16;border:1px solid #00ff9f;color:#00ff9f;padding:0.6rem 1.2rem;border-radius:5px;font-size:0.72rem;z-index:9999';
+  t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+async function sha(buffer, algo='SHA-256') {
+  const h = await crypto.subtle.digest(algo, buffer);
+  return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ══════════════════════════════
+// API CALLS (via backend proxy)
+// ══════════════════════════════
+async function api(path, opts={}) {
+  try {
+    const r = await fetch(API + path, opts);
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+// ══════════════════════════════
+// BOT CLAUDE
+// ══════════════════════════════
+async function sendBot() {
+  const key = document.getElementById('claude-key').value.trim();
+  const input = document.getElementById('bot-input').value.trim();
+  const mode = document.getElementById('bot-mode').value;
+  if (!key) { toast('⚠ Clé API Claude requise'); return; }
+  if (!input) { toast('⚠ Entrez un contenu à analyser'); return; }
+
+  addMsg('user', input.substring(0, 200) + (input.length > 200 ? '…' : ''));
+  document.getElementById('bot-input').value = '';
+  ldr('ldr-bot', true);
+
+  // Analyse technique préalable
+  let techContext = '';
+  const urls = input.match(/https?:\/\/[^\s"'<>]+/g) || [];
+  const ips = input.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g) || [];
+  const hashes = input.match(/\b[a-f0-9]{64}\b/gi) || [];
+
+  if (urls.length) {
+    for (const url of urls.slice(0, 2)) {
+      let domain;
+      try { domain = new URL(url).hostname; } catch(e) { domain = url; }
+      const uh = await api('/api/urlhaus/host', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({host: domain}) });
+      if (uh) techContext += `\nURLhaus pour ${domain}: ${uh.query_status === 'is_listed' ? '⚠ MALVEILLANT — '+uh.urls_count+' URL(s)' : 'Propre'}`;
+    }
+  }
+
+  if (ips.length) {
+    for (const ip of ips.slice(0, 2)) {
+      const geo = await api(`/api/geo?ip=${ip}`);
+      if (geo) techContext += `\nIP ${ip}: ${geo.country_name || '?'} — ${geo.org || '?'}`;
+    }
+  }
+
+  if (hashes.length) {
+    for (const hash of hashes.slice(0, 2)) {
+      const mb = await api('/api/malwarebazaar', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query:'get_info', hash}) });
+      if (mb?.query_status === 'ok' && mb.data) techContext += `\nHash ${hash.substring(0,16)}…: ⚠ MALWARE CONNU — ${mb.data[0].signature || '?'}`;
+    }
+  }
+
+  const prompts = {
+    phishing: `Tu es un analyste SOC senior expert en sécurité email et phishing. Analyse cet email/URL suspect de manière structurée. Donne: 1) Verdict clair (phishing/légitime/suspect) 2) Indicateurs clés trouvés 3) Niveau de confiance 4) Actions de remédiation immédiates. Sois direct et actionnable.`,
+    malware: `Tu es un analyste malware senior. Analyse cet élément suspect. Donne: 1) Verdict (malveillant/bénin/suspect) 2) Comportement probable 3) Famille de malware si identifiable 4) IOCs à extraire 5) Actions de containment immédiates.`,
+    incident: `Tu es un RSSI/analyste incident. Analyse cette alerte de sécurité. Donne: 1) Nature de l'incident 2) Sévérité (P1/P2/P3) 3) Scope probable 4) Actions immédiates (0-1h) 5) Actions court terme (1-24h) 6) Qui notifier.`,
+    log: `Tu es un analyste SOC expert en analyse de logs. Analyse ces logs. Donne: 1) Ce qui s'est passé 2) Si c'est malveillant/suspect/bénin 3) Pattern identifié 4) Recommandations.`,
+    free: `Tu es un expert cybersécurité polyvalent. Réponds de manière précise et actionnable à cette question.`
+  };
+
+  chatHistory.push({ role: 'user', content: input + (techContext ? `\n\n[CONTEXTE TECHNIQUE AUTOMATIQUE:${techContext}]` : '') });
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: prompts[mode],
+        messages: chatHistory
+      })
+    });
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || 'Erreur de réponse';
+    chatHistory.push({ role: 'assistant', content: reply });
+    addMsg('bot', reply);
+  } catch(e) {
+    addMsg('bot', '⚠ Erreur: ' + e.message);
+  }
+
+  ldr('ldr-bot', false);
+}
+
+function addMsg(role, text) {
+  const wrap = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = `msg msg-${role}`;
+  div.innerHTML = `<div class="msg-label">${role === 'user' ? '👤 VOUS' : '🤖 CYBEROPS BOT'}</div><div style="white-space:pre-wrap">${text}</div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function clearChat() {
+  document.getElementById('chat-messages').innerHTML = '';
+  chatHistory = [];
+  addMsg('bot', 'Conversation effacée. Envoyez-moi un nouvel élément à analyser.');
+}
+
+// ══════════════════════════════
+// URL / IP SCAN
+// ══════════════════════════════
+async function scanTarget() {
+  const raw = document.getElementById('url-inp').value.trim();
+  if (!raw) return;
+  ldr('ldr-url', true);
+
+  const isIP = /^\d+\.\d+\.\d+\.\d+$/.test(raw);
+  let domain = raw;
+  try { domain = new URL(raw.startsWith('http') ? raw : 'http://' + raw).hostname; } catch(e) {}
+
+  let results = [];
+
+  if (isIP) {
+    const [geo, uh] = await Promise.all([
+      api(`/api/geo?ip=${raw}`),
+      api('/api/urlhaus/host', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({host:raw}) })
+    ]);
+    const bad = uh?.query_status === 'is_listed';
+    document.getElementById('url-result').innerHTML =
+      (bad ? vrd('vmal','⚠ IP MALVEILLANTE') : vrd('vclean','✓ IP PROPRE')) +
+      tbl([['IP',raw],['Pays',geo?.country_name||'?'],['Org',geo?.org||'?'],['URLhaus',bad?'🔴 RÉPERTORIÉE':'🟢 Propre']]);
+  } else {
+    const uh = await api('/api/urlhaus/host', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({host:domain}) });
+    const bad = uh?.query_status === 'is_listed';
+    document.getElementById('url-result').innerHTML =
+      (bad ? vrd('vmal','⚠ URL MALVEILLANTE') : vrd('vclean','✓ URL PROPRE')) +
+      tbl([['URL',raw],['Domaine',domain],['URLhaus',bad?'🔴 RÉPERTORIÉE':'🟢 Propre'],['URLs malveillantes',String(uh?.urls_count||0)]]);
+  }
+
+  document.getElementById('url-sources').innerHTML = `
+    <div class="feed-item"><span class="ftag tcti">URLhaus</span><span>Vérifié ✓</span></div>
+    <div class="feed-item"><span class="ftag ${isIP?'tcti':'tmal'}">${isIP?'GeoIP':'Domaine'}</span><span>Analysé</span></div>
+  `;
+  document.getElementById('url-tech').innerHTML = tbl([['Cible',raw],['Type',isIP?'Adresse IP':'URL/Domaine'],['Date',new Date().toLocaleString('fr-FR')]]);
+  ldr('ldr-url', false);
+}
+
+// ══════════════════════════════
+// FILE SCAN
+// ══════════════════════════════
+async function handleFile(f) {
+  if (!f) return;
+  ldr('ldr-file', true);
+  const buf = await f.arrayBuffer();
+  const [sha256, sha1] = await Promise.all([sha(buf,'SHA-256'), sha(buf,'SHA-1')]);
+
+  document.getElementById('file-hashes').innerHTML = tbl([
+    ['SHA-256', `<span style="color:#00ff9f;font-size:0.65rem;word-break:break-all">${sha256}</span>`],
+    ['SHA-1', `<span style="color:#00e5ff;font-size:0.65rem;word-break:break-all">${sha1}</span>`],
+  ]);
+  document.getElementById('file-meta').innerHTML = tbl([
+    ['Nom', f.name], ['Taille', (f.size/1024).toFixed(1)+' KB'],
+    ['Type', f.type||'Inconnu'], ['Extension', f.name.split('.').pop().toUpperCase()]
+  ]);
+
+  const mb = await api('/api/malwarebazaar', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query:'get_info', hash:sha256}) });
+  if (mb?.query_status === 'ok' && mb.data) {
+    const s = mb.data[0];
+    document.getElementById('file-verdict').innerHTML = vrd('vmal','🔴 MALWARE DÉTECTÉ') +
+      tbl([['Famille',s.signature||'?'],['Type',s.file_type],['Vu',s.first_seen]]);
+  } else {
+    document.getElementById('file-verdict').innerHTML = vrd('vclean','✓ NON CONNU') +
+      '<div style="color:#6a8a7a;font-size:0.72rem;margin-top:0.5rem">Non trouvé dans MalwareBazaar.</div>';
+  }
+  ldr('ldr-file', false);
+}
+
+async function lookupHash() {
+  const h = document.getElementById('fi-hash').value.trim();
+  if (!h) return;
+  ldr('ldr-file', true);
+  const mb = await api('/api/malwarebazaar', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query:'get_info', hash:h}) });
+  if (mb?.query_status === 'ok' && mb.data) {
+    const s = mb.data[0];
+    document.getElementById('file-verdict').innerHTML = vrd('vmal','🔴 MALWARE') + tbl([['Famille',s.signature||'?'],['Type',s.file_type]]);
+  } else {
+    document.getElementById('file-verdict').innerHTML = vrd('vclean','✓ NON TROUVÉ');
+  }
+  ldr('ldr-file', false);
+}
+
+// ══════════════════════════════
+// CVE
+// ══════════════════════════════
+async function searchCVE() {
+  const q = document.getElementById('cve-inp').value.trim();
+  const sev = document.getElementById('cve-sev').value;
+  if (!q) return;
+  ldr('ldr-cve', true);
+
+  const params = q.match(/^CVE-\d{4}-\d+$/i) ? `cveId=${q.toUpperCase()}` : `keyword=${encodeURIComponent(q)}`;
+  const d = await api(`/api/nvd?${params}${sev?'&severity='+sev:''}`);
+  ldr('ldr-cve', false);
+
+  if (!d?.vulnerabilities?.length) {
+    document.getElementById('cve-results').innerHTML = '<div class="notice n-y">Aucun résultat.</div>';
+    return;
+  }
+
+  document.getElementById('cve-results').innerHTML = d.vulnerabilities.map(item => {
+    const v = item.cve;
+    const cvss = v.metrics?.cvssMetricV31?.[0]?.cvssData?.baseScore || v.metrics?.cvssMetricV2?.[0]?.cvssData?.baseScore || 0;
+    const desc = (v.descriptions?.find(d=>d.lang==='en')?.value || '').substring(0, 200);
+    return `<div class="card" style="margin-bottom:0.75rem">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap">
+        <span style="color:#00ff9f;font-family:monospace;font-size:0.8rem">${v.id}</span>
+        ${cvssB(cvss)}
+        <span style="color:#6a8a7a;font-size:0.65rem">${v.published?.substring(0,10)||'?'}</span>
+      </div>
+      <div style="font-size:0.75rem;line-height:1.6;color:#b8d4c8">${desc}${desc.length===200?'…':''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════
+// CISA KEV
+// ══════════════════════════════
+async function loadKEV() {
+  ldr('ldr-kev', true);
+  if (!kevData) {
+    const d = await api('/api/cisa-kev');
+    if (d?.vulnerabilities) kevData = d.vulnerabilities;
+  }
+  ldr('ldr-kev', false);
+  if (!kevData) { document.getElementById('kev-results').innerHTML = '<div class="notice n-r">Erreur de chargement.</div>'; return; }
+  renderKEV(kevData);
+}
+
+function filterKEV() {
+  if (!kevData) return;
+  const f = document.getElementById('kev-filter').value.toLowerCase();
+  renderKEV(f ? kevData.filter(v => (v.cveID+v.vendorProject+v.product).toLowerCase().includes(f)) : kevData);
+}
+
+function renderKEV(data) {
+  const ransomware = data.filter(v => v.knownRansomwareCampaignUse === 'Known').length;
+  document.getElementById('kev-stats').innerHTML = `
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem">
+      <span style="color:#ff2d55;font-size:0.75rem">${data.length} vulnérabilités</span>
+      <span style="color:#ff6b35;font-size:0.75rem">${ransomware} liées ransomware</span>
+    </div>`;
+  document.getElementById('kev-results').innerHTML = [...data].sort((a,b)=>new Date(b.dateAdded)-new Date(a.dateAdded)).slice(0,50).map(v=>`
+    <div class="feed-item">
+      <span class="ftag ${v.knownRansomwareCampaignUse==='Known'?'tkev':'tmal'}">${v.cveID}</span>
+      <span style="flex:1;font-size:0.72rem">
+        <span style="color:#6a8a7a">${v.vendorProject} / ${v.product}</span><br>
+        ${v.vulnerabilityName}
+        ${v.knownRansomwareCampaignUse==='Known'?'<span style="color:#ff2d55;font-size:0.6rem"> 🔴 RANSOMWARE</span>':''}
+      </span>
+      <span style="color:#6a8a7a;font-size:0.6rem;white-space:nowrap">${v.dateAdded}</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════
+// DNS
+// ══════════════════════════════
+async function analyzeDomain() {
+  const dom = document.getElementById('dns-inp').value.trim();
+  if (!dom) return;
+  ldr('ldr-dns', true);
+
+  const types = ['A','AAAA','MX','TXT','NS'];
+  const [dnsRes, certs] = await Promise.all([
+    Promise.all(types.map(t => api(`/api/dns?name=${dom}&type=${t}`).then(d => ({type:t,data:d})))),
+    api(`/api/crtsh?domain=${dom}`)
+  ]);
+  ldr('ldr-dns', false);
+
+  let recs = '';
+  dnsRes.forEach(({type, data}) => {
+    (data?.Answer||[]).forEach(r => {
+      recs += `<div style="display:flex;gap:0.75rem;padding:0.4rem;border-bottom:1px solid #0e2030;font-size:0.72rem">
+        <span style="color:#00e5ff;min-width:40px;font-size:0.62rem">${type}</span>
+        <span style="word-break:break-all">${r.data}</span>
+        <span style="color:#6a8a7a;font-size:0.6rem">TTL ${r.TTL}</span>
+      </div>`;
+    });
+  });
+  document.getElementById('dns-records').innerHTML = recs || '<div class="rph">[ Aucun enregistrement ]</div>';
+
+  if (certs?.length) {
+    const subs = [...new Set(certs.map(c=>c.name_value).join('\n').split('\n').filter(s=>!s.startsWith('*')&&s.includes(dom)))].slice(0,20);
+    document.getElementById('dns-certs').innerHTML =
+      `<div style="font-size:0.65rem;color:#6a8a7a;margin-bottom:0.5rem">${subs.length} sous-domaines découverts</div>` +
+      subs.map(s=>`<div style="padding:0.3rem;border-bottom:1px solid #0e2030;font-size:0.72rem;color:#00ff9f">${s}</div>`).join('');
+  } else {
+    document.getElementById('dns-certs').innerHTML = '<div class="rph">[ Aucun certificat trouvé ]</div>';
+  }
+}
+
+// ══════════════════════════════
+// EMAIL SECURITY
+// ══════════════════════════════
+async function checkEmail() {
+  const dom = document.getElementById('email-inp').value.trim();
+  if (!dom) return;
+  ldr('ldr-email', true);
+
+  const [spfDns, dmarcDns, mxDns] = await Promise.all([
+    api(`/api/dns?name=${dom}&type=TXT`),
+    api(`/api/dns?name=_dmarc.${dom}&type=TXT`),
+    api(`/api/dns?name=${dom}&type=MX`)
+  ]);
+  ldr('ldr-email', false);
+
+  const allTxt = (spfDns?.Answer||[]).map(r=>r.data).join(' ');
+  const spf = allTxt.match(/v=spf1[^"']*/);
+  const dmarc = (dmarcDns?.Answer||[]).map(r=>r.data).join(' ');
+  const hasDmarc = dmarc.includes('v=DMARC1');
+  const dmarcPolicy = dmarc.match(/p=(\w+)/)?.[1] || null;
+  let score = 0;
+
+  document.getElementById('spf-r').innerHTML = spf
+    ? vrd('vclean','✓ SPF PRÉSENT') + `<div style="font-size:0.68rem;color:#00ff9f;word-break:break-all;background:#000;padding:0.5rem;border-radius:4px">${spf[0]}</div>`
+    : vrd('vmal','🔴 SPF ABSENT') + '<div style="font-size:0.72rem;color:#ff2d55">Risque de spoofing email élevé.</div>';
+  if (spf) score += 30;
+
+  document.getElementById('dmarc-r').innerHTML = hasDmarc
+    ? vrd(dmarcPolicy==='reject'?'vclean':'vsusp',`${dmarcPolicy==='reject'?'✓':'⚠'} DMARC: ${(dmarcPolicy||'none').toUpperCase()}`) + `<div style="font-size:0.68rem;color:#00e5ff;word-break:break-all;background:#000;padding:0.5rem;border-radius:4px">${dmarc.substring(0,150)}</div>`
+    : vrd('vmal','🔴 DMARC ABSENT') + '<div style="font-size:0.72rem;color:#ff2d55">Aucune politique email définie.</div>';
+  if (hasDmarc) score += dmarcPolicy==='reject'?40:20;
+
+  // DKIM check
+  let dkimFound = false;
+  for (const sel of ['default','google','mail','dkim','selector1','selector2','k1']) {
+    const d = await api(`/api/dns?name=${sel}._domainkey.${dom}&type=TXT`);
+    if (d?.Answer?.some(r=>r.data.includes('v=DKIM1'))) { dkimFound=true; score+=30; break; }
+  }
+  document.getElementById('dkim-r').innerHTML = dkimFound
+    ? vrd('vclean','✓ DKIM TROUVÉ')
+    : vrd('vunk','⚪ DKIM NON DÉTECTÉ') + '<div style="font-size:0.72rem;color:#6a8a7a">Sélecteur standard non trouvé.</div>';
+
+  const col = score>=75?'#00ff9f':score>=40?'#ffcc00':'#ff2d55';
+  document.getElementById('email-score').innerHTML = `
+    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">
+      <div style="flex:1;height:6px;background:#0e2030;border-radius:3px;overflow:hidden">
+        <div style="width:${score}%;height:100%;background:${col};box-shadow:0 0 8px ${col};transition:width 0.8s"></div>
+      </div>
+      <span style="color:${col};font-size:0.75rem">${score}/100</span>
+    </div>
+    ${tbl([['SPF',spf?'✓':'🔴 Absent'],['DKIM',dkimFound?'✓':'⚪ Non détecté'],['DMARC',hasDmarc?`✓ (${dmarcPolicy})`:'🔴 Absent'],['MX',(mxDns?.Answer||[]).length>0?'✓':'⚠ Absent']])}
+  `;
+}
+
+// ══════════════════════════════
+// INVENTAIRE
+// ══════════════════════════════
+async function addAsset() {
+  const vendor = document.getElementById('inv-vendor').value.trim();
+  const product = document.getElementById('inv-product').value.trim();
+  const version = document.getElementById('inv-version').value.trim();
+  if (!vendor || !product) { toast('⚠ Vendor et produit requis'); return; }
+
+  await api('/api/inventory', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      vendor, product, version,
+      category: document.getElementById('inv-category').value,
+      cpe: document.getElementById('inv-cpe').value.trim(),
+      criticality: document.getElementById('inv-crit').value
+    })
+  });
+
+  document.getElementById('inv-vendor').value = '';
+  document.getElementById('inv-product').value = '';
+  document.getElementById('inv-version').value = '';
+  document.getElementById('inv-cpe').value = '';
+  toast('✓ Asset ajouté');
+  loadInventory();
+}
+
+async function loadInventory() {
+  const inv = await api('/api/inventory');
+  if (!inv?.length) { document.getElementById('inventory-list').innerHTML = '<div class="rph">[ Aucun asset ]</div>'; return; }
+  document.getElementById('inventory-list').innerHTML = inv.map(a => `
+    <div class="asset-row">
+      <span class="tag">${a.category}</span>
+      <span style="flex:1"><strong style="color:#00ff9f">${a.vendor}</strong> ${a.product} <span style="color:#6a8a7a">${a.version||''}</span></span>
+      <span class="tag" style="color:${a.criticality==='P1'?'#ff2d55':a.criticality==='P2'?'#ffcc00':'#6a8a7a'}">${a.criticality}</span>
+      <button class="btn btn-r" style="padding:0.2rem 0.5rem;font-size:0.6rem" onclick="deleteAsset(${a.id})">✕</button>
+    </div>`).join('');
+}
+
+async function deleteAsset(id) {
+  await api(`/api/inventory/${id}`, { method:'DELETE' });
+  loadInventory();
+}
+
+async function runWatchNow() {
+  toast('▶ Veille CVE lancée — résultats dans les alertes dans quelques instants');
+  await api('/api/inventory');
+  setTimeout(loadAlerts, 5000);
+}
+
+// ══════════════════════════════
+// ALERTES
+// ══════════════════════════════
+async function loadAlerts() {
+  const alerts = await api('/api/alerts');
+  const unread = (alerts||[]).filter(a => !a.read).length;
+  document.getElementById('alert-count').textContent = unread;
+
+  if (!alerts?.length) { document.getElementById('alerts-list').innerHTML = '<div class="rph">[ Aucune alerte ]</div>'; return; }
+  document.getElementById('alerts-list').innerHTML = alerts.map(a => `
+    <div class="feed-item" style="${!a.read?'background:rgba(255,45,85,0.03)':''}">
+      <span class="ftag tmal">${a.cveId}</span>
+      <span style="flex:1;font-size:0.72rem">
+        <strong style="color:#ff2d55">${a.cveId}</strong> — ${a.assetName}<br>
+        <span style="color:#6a8a7a">${a.description?.substring(0,120)}…</span>
+      </span>
+      <span style="color:#6a8a7a;font-size:0.6rem;white-space:nowrap">${new Date(a.date).toLocaleDateString('fr-FR')}</span>
+    </div>`).join('');
+}
+
+function clearAlerts() {
+  document.getElementById('alerts-list').innerHTML = '<div class="rph">[ Alertes effacées ]</div>';
+  document.getElementById('alert-count').textContent = '0';
+}
+
+// ══════════════════════════════
+// BREACH
+// ══════════════════════════════
+async function checkBreach() {
+  const email = document.getElementById('breach-inp').value.trim();
+  if (!email) return;
+  ldr('ldr-breach', true);
+  const d = await api(`/api/hibp?email=${encodeURIComponent(email)}`);
+  ldr('ldr-breach', false);
+  if (!d) {
+    document.getElementById('breach-result').innerHTML = '<div class="notice n-y">Clé HIBP non configurée sur le serveur.</div>';
+    return;
+  }
+  if (!d.length) {
+    document.getElementById('breach-result').innerHTML = vrd('vclean','✓ AUCUNE FUITE') + `<div style="color:#6a8a7a;font-size:0.78rem">${email} non trouvé dans les fuites connues.</div>`;
+  } else {
+    document.getElementById('breach-result').innerHTML = vrd('vmal',`⚠ ${d.length} FUITE(S)`) +
+      d.map(b=>`<div class="feed-item"><span class="ftag tmal">${b.DataClasses?.[0]||'data'}</span><span style="flex:1;font-size:0.72rem"><strong style="color:#ff2d55">${b.Name}</strong><br><span style="color:#6a8a7a">${b.BreachDate} — ${b.PwnCount?.toLocaleString()} comptes</span></span></div>`).join('');
+  }
+}
+
+async function checkPwd() {
+  const pwd = document.getElementById('pwd-inp').value;
+  if (!pwd) return;
+  ldr('ldr-pwd', true);
+  const h = await sha(new TextEncoder().encode(pwd).buffer, 'SHA-1');
+  const prefix = h.substring(0,5).toUpperCase(), suffix = h.substring(5).toUpperCase();
+  try {
+    const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+    const txt = await res.text();
+    const match = txt.split('\n').find(l=>l.startsWith(suffix));
+    const count = match ? parseInt(match.split(':')[1]) : 0;
+    document.getElementById('pwd-result').innerHTML = count > 0
+      ? vrd('vmal','⚠ COMPROMIS') + `<div style="color:#ff2d55;font-size:0.78rem">Trouvé <strong>${count.toLocaleString()}</strong> fois dans des fuites.</div>`
+      : vrd('vclean','✓ NON COMPROMIS');
+  } catch(e) { document.getElementById('pwd-result').innerHTML = '<div class="notice n-r">Erreur de vérification.</div>'; }
+  ldr('ldr-pwd', false);
+}
+
+// ══════════════════════════════
+// INIT
+// ══════════════════════════════
+loadAlerts();
+setInterval(loadAlerts, 60000);
+</script>
+</body>
+</html>
